@@ -1,0 +1,26 @@
+{
+	"name": "pols-elements",
+	"version": "1.0.0",
+	"description": "Permite crear plantillas para el maquetizado, programación y estilizado de un Custom Element. Las plantillas posteriormente se utilizarán para la aompilación a un fichero de JavaScript.",
+	"main": "main.js",
+	"directories": {
+		"lib": "lib"
+	},
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"bin": {
+		"pols-elements": "./bin/pols-elements.js"
+	},
+	"preferGlobal": true,
+	"author": "Pols",
+	"license": "MIT",
+	"dependencies": {
+		"colors": "^1.3.3",
+		"icon.font": "^1.1.1",
+		"minify": "^4.1.1",
+		"pols-helper": "^1.0.1",
+		"sass": "^1.15.2"
+	},
+	"devDependencies": {}
+}

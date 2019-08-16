@@ -1,0 +1,165 @@
+<html>
+<title>@COMPONENT_NAME | PoslElements</title>
+
+<body>
+	<style>
+		body {
+			padding: 0px;
+			margin: 0px;
+			font-family: Arial, Helvetica, sans-serif;
+			background-color: rgb(228, 228, 228);
+		}
+
+		article {
+			display: block;
+			margin: 0px 20px 20px 20px;
+			font-size: 12px;
+			background-color: white;
+			box-shadow: 0px 5px 5px rgba(0, 0, 0, 0.5);
+			padding: 20px;
+			border-radius: 5px;
+		}
+
+		article h3 {
+			margin-top: 0px;
+		}
+
+		.tag {
+			border: 2px solid silver;
+			border-radius: 3px;
+			padding: 10px;
+			margin: auto;
+		}
+
+		header {
+			padding: 10px;
+			background: linear-gradient(135deg, rgba(171, 167, 235, 1) 0%, rgba(75, 82, 209, 1) 50%, rgba(44, 39, 184, 1) 51%, rgba(141, 197, 240, 1) 100%);
+			box-shadow: 0px 5px 5px rgba(0, 0, 0, 0.5);
+			margin-bottom: 20px;
+		}
+
+		header h1,
+		header h3 {
+			margin: 0px;
+			color: white;
+			filter: drop-shadow(0px 2px 3px black)
+		}
+
+		code {
+			padding: 1px 4px;
+			background-color: #d4d4d4;
+			color: black;
+			border-radius: 2px;
+		}
+
+		div.sintax {
+			padding: 10px;
+			border-radius: 3px;
+			background-color: #d4d4d4;
+			font-weight: bold;
+		}
+
+		div.sintax span[contenteditable] {
+			background-color: #bcbcbc;
+			border: 2px solid #adadad;
+			padding: 1px 10px;
+			border-radius: 2px;
+			margin: 1px;
+			display: inline-block;
+			vertical-align: middle;
+		}
+
+		div.sintax span[contenteditable]:focus {
+			outline: none;
+		}
+
+		a {
+			cursor: pointer;
+			text-decoration: underline;
+			color: rgb(71, 91, 224);
+		}
+
+		.text-red {
+			color: rgb(211, 35, 35);
+		}
+
+		.text-blue {
+			color: rgb(49, 76, 144);
+		}
+
+		.definition {
+			margin-left: 20px;
+		}
+
+		article h4 {
+			margin-left: 10px;
+		}
+	</style>
+	@STYLES
+	<header>
+		<h1>@COMPONENT_NAME</h1>
+		<h3>PoslElements</h3>
+	</header>
+	<article>@PRINCIPAL</article>
+	<article>
+		<h3>Modelo</h3>
+		<div class="tag">@COMPONENT_TEMPLATE</div>
+	</article>
+	<article>
+		<h3>Sintáxis</h3>
+		<h4><a id="load-sintax">Cargar sintaxis desde el modelo</a></h4>
+		<div class="sintax">
+			&lt<span class="text-red">@COMPONENT_NAME</span>@ATTRIBUTES_SINTAX&gt<span contenteditable="true" data-property-name="innerHTML"></span>&lt<span class="text-red">/@COMPONENT_NAME</span>&gt
+		</div>
+	</article>
+	<article>
+		<h3>Atributos</h3>
+		@ATTRIBUTES_DEFINITIONS
+	</article>
+	<article>
+		<h3>Propiedades</h3>
+		@PROPERTIES_DEFINITIONS
+	</article>
+	<article>
+		<h3>Métodos</h3>
+		@METHODS_DEFINITIONS
+	</article>
+	<article>
+		<h3>Eventos</h3>
+		@EVENTS_DEFINITIONS
+	</article>
+</body>
+@PREV_SCRIPTS
+<script src="@COMPONENT_NAME.js"></script>
+<script>
+	var polsElement = document.querySelector('@COMPONENT_NAME');
+	var events = [@EVENTS];
+	for (let i = 0; i < events.length; i++) {
+		polsElement.addEventListener(events[i], function(event) {
+			console.info(`Evento ${events[i]}`, event);
+		});
+	}
+	var editablesSintax = document.querySelectorAll('span[contenteditable]');
+	for (let i in editablesSintax) {
+		if (isNaN(Number(i))) continue;
+		editablesSintax[i].addEventListener('input', function (event) {
+			let propertyName = this.getAttribute('data-property-name');
+			if (propertyName) polsElement[propertyName] = this.innerHTML;
+			let attributeName = this.getAttribute('data-attribute-name');
+			if (attributeName) polsElement.setAttribute(attributeName, this.innerHTML);
+		});
+		editablesSintax[i].addEventListener('keydown', function (event) {
+			if (event.keyCode === 13) {
+				event.preventDefault();
+			}
+		});
+	}
+	document.querySelector('#load-sintax').addEventListener('click', function () {
+		editablesSintax.forEach(function(element) {
+			console.info('Atributo cargado', element, element.getAttribute('data-attribute-name'), polsElement.getAttribute(element.getAttribute('data-attribute-name')));
+			element.innerHTML = polsElement.getAttribute(element.getAttribute('data-attribute-name'));
+		});
+	});
+</script>
+@POST_SCRIPTS
+</html>
