@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-const helper = require('helper.js');
-const Fs = require('fs');
+const ph = require('pols-helper');
+const fs = require('fs');
 
 /* Acción a ejecutar */
-if (typeof process.argv[2] === 'undefined') helper.showError("Debe especificar la tarea a realizar.");
+if (typeof process.argv[2] === 'undefined') ph.showError("Debe especificar la tarea a realizar.");
 var command = process.argv[2].toLowerCase();
 
 /* Lista de comandos */
@@ -13,22 +13,22 @@ let commands = [
 	['compile', 'Compila los archivos code.js, style.scss y template.html en un único archivo de tipo JavaScript con la definición del Custom Element.'],
 ];
 
-if (!helper.inCommands(command, commands)) {
-	helper.showError(`Comando ${command} no reconocido.`, false);
-	helper.showCommands('Comandos permitidos', );
+if (!ph.inCommands(command, commands)) {
+	ph.showError(`Comando ${command} no reconocido.`, false);
+	ph.showCommands('Comandos permitidos', );
 }
 
-const process = require('../index.js');
+const functions = require('../index.js');
 
 switch (command) {
 	case 'compile':
 		var destination = process.argv[3];
-		if (destination && !Fs.existsSync(destination)) helper.showError("No existe el directorio de destino '" + destination + "'");
-		process.polsElements.compile(destination);
+		if (destination && !fs.existsSync(destination)) ph.showError("No existe el directorio de destino '" + destination + "'");
+		functions.compile(destination);
 		break;
 	case 'create':
 		/* Nombre del componente / Ruta de Salida */
-		if (typeof process.argv[3] === 'undefined') helper.terminado('Debe especificarse el nombre del componente.');
-		process.polsElements.create(process.argv[3].toLowerCase());
+		if (typeof process.argv[3] === 'undefined') ph.terminado('Debe especificarse el nombre del componente.');
+		functions.create(process.argv[3].toLowerCase());
 		break;
 }

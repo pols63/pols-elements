@@ -1,4 +1,4 @@
-const helper = require('helper.js');
+const ph = require('pols-helper');
 const fs = require('fs');
 const path = require('path');
 const minify = require('minify');
@@ -16,15 +16,15 @@ module.exports = {
 		const fileDocumentation = './resources/documentation.html';
 
 		/* Valida que exista el archivo code.js */
-		if (!fs.existsSync(fileCode)) helper.showError("No existe el archivo de definición del componente '" + fileCode + "'.");
+		if (!fs.existsSync(fileCode)) ph.showError("No existe el archivo de definición del componente '" + fileCode + "'.");
 
 		//Carga el archivo de configuración. Require hace la transformación a un objeto JSON.
 		var contentCode = require(fileCode);
-		(contentCode.tagName) || helper.showError("No se ha definido el nombre de la etiqueta. Debe ser establecido en la propiedad 'tagName' en el archivo 'code.js'.");
+		(contentCode.tagName) || ph.showError("No se ha definido el nombre de la etiqueta. Debe ser establecido en la propiedad 'tagName' en el archivo 'code.js'.");
 		var componentName = contentCode.tagName;
 
 		/* Valida el nombre de la etiqueta */
-		(componentName.indexOf('-') > 0) || helper.showError("La propiedad 'tagName' debe llegar un guión luego de la primera letra.");
+		(componentName.indexOf('-') > 0) || ph.showError("La propiedad 'tagName' debe llegar un guión luego de la primera letra.");
 
 		/* Obtiene el nombre de la clase */
 		var className = componentName.strongReplace('-', ' ').capitalize().strongReplace(' ', '');
@@ -32,7 +32,7 @@ module.exports = {
 		/* HTML */
 		var contentTemplate = '';
 		if (contentCode.template) {
-			if (!fs.existsSync(fileTemplate)) helper.showError("No existe el archivo de plantilla '" + fileTemplate + "'");
+			if (!fs.existsSync(fileTemplate)) ph.showError("No existe el archivo de plantilla '" + fileTemplate + "'");
 			contentTemplate = fs.readFileSync(fileTemplate, { encoding: 'utf8' });
 			/* Elimina los comentarios. */
 			contentTemplate = contentTemplate.replace(/<!--.*-->/g, '');
@@ -41,7 +41,7 @@ module.exports = {
 		/* CSS */
 		var contentStyles = '';
 		if (contentCode.styles) {
-			if (!fs.existsSync(fileStyles)) helper.showError("Se ha indicado 'true' en la propiedad 'style' del archivo 'code.js' pero no existe el archivo de estilos '" + fileStyles + "'");
+			if (!fs.existsSync(fileStyles)) ph.showError("Se ha indicado 'true' en la propiedad 'style' del archivo 'code.js' pero no existe el archivo de estilos '" + fileStyles + "'");
 			var Sass = require('sass');
 			contentStyles = '<style>' + Sass.renderSync({
 				/* Se pasa el nombre del archivo para que funcione la sentencia import en el código */
@@ -144,28 +144,28 @@ module.exports = {
 		var distributionDir = path.resolve(directorySrc, 'dist');
 		if (!fs.existsSync(distributionDir)) {
 			fs.mkdirSync(distributionDir);
-			helper.showMessage("Directorio '" + distributionDir + "' creado.");
+			ph.showMessage("Directorio '" + distributionDir + "' creado.");
 		}
 
 		/* Crea el archivo compilado. */
 		var outputFile2 = path.resolve(distributionDir, componentName + '.js');
 		fs.writeFileSync(outputFile2, fileContent2, { encoding: 'utf8' });
-		helper.showMessage("Archivo '" + outputFile2 + "' creado.");
+		ph.showMessage("Archivo '" + outputFile2 + "' creado.");
 		if (destination) {
 			outputFile2 = path.resolve(destination, componentName + '.js');
 			fs.writeFileSync(outputFile2, fileContent2, { encoding: 'utf8' });
-			helper.showMessage("Archivo '" + outputFile2 + "' creado.");
+			ph.showMessage("Archivo '" + outputFile2 + "' creado.");
 		}
 
 		/* Crea el archivo compilado minificado. */
 		minify(outputFile2).then(function (text) {
 			outputFile2 = path.resolve(distributionDir, componentName + '.min.js');
 			fs.writeFileSync(outputFile2, text, { encoding: 'utf8' });
-			helper.showMessage("Archivo '" + outputFile2 + "' creado.");
+			ph.showMessage("Archivo '" + outputFile2 + "' creado.");
 			if (destination) {
 				outputFile2 = path.resolve(destination, componentName + '.min.js');
 				fs.writeFileSync(outputFile2, text, { encoding: 'utf8' });
-				helper.showMessage("Archivo '" + outputFile2 + "' creado.");
+				ph.showMessage("Archivo '" + outputFile2 + "' creado.");
 			}
 		});
 
@@ -282,7 +282,7 @@ module.exports = {
 			}
 			/* Escritura del archivo */
 			fs.writeFileSync(outputFile2, content, { encoding: 'utf8' });
-			helper.showMessage("Archivo '" + outputFile2 + "' creado.");
+			ph.showMessage("Archivo '" + outputFile2 + "' creado.");
 		}
 	},
 	create: function (componentName) {
@@ -292,34 +292,34 @@ module.exports = {
 		var fileCode = path.resolve(directory, 'code.js');
 		if (!fs.existsSync(fileCode)) {
 			fs.writeFileSync(fileCode, fs.readFileSync('./resources/code.js', { encoding: 'utf8' }).replace('@COMPONENT_NAME', componentName), { encoding: 'utf8' });
-			helper.showMessage("Archivo '" + fileCode + "' creado.");
+			ph.showMessage("Archivo '" + fileCode + "' creado.");
 		} else {
-			helper.showMessage("El archivo '" + fileCode + "' ya existe y no se ha creado uno nuevo.");
+			ph.showMessage("El archivo '" + fileCode + "' ya existe y no se ha creado uno nuevo.");
 		}
 		/* Archivo de plantilla */
 		var fileTemplate = path.resolve(directory, 'template.html');
 		if (!fs.existsSync(fileTemplate)) {
 			fs.writeFileSync(fileTemplate, fs.readFileSync('./resources/template.html', { encoding: 'utf8' }), { encoding: 'utf8' });
-			helper.showMessage("Archivo '" + fileTemplate + "' creado.");
+			ph.showMessage("Archivo '" + fileTemplate + "' creado.");
 		} else {
-			helper.showMessage("El archivo '" + fileTemplate + "' ya existe y no se ha creado uno nuevo.");
+			ph.showMessage("El archivo '" + fileTemplate + "' ya existe y no se ha creado uno nuevo.");
 		}
 		/* Archivo de estilos */
 		var fileStyles = path.resolve(directory, 'styles.scss');
 		if (!fs.existsSync(fileStyles)) {
 			fs.writeFileSync(fileStyles, fs.readFileSync('./resources/styles.scss', { encoding: 'utf8' }), { encoding: 'utf8' });
-			helper.showMessage("Archivo '" + fileStyles + "' creado.");
+			ph.showMessage("Archivo '" + fileStyles + "' creado.");
 		} else {
-			helper.showMessage("El archivo '" + fileStyles + "' ya existe y no se ha creado uno nuevo.");
+			ph.showMessage("El archivo '" + fileStyles + "' ya existe y no se ha creado uno nuevo.");
 		}
 		/* Archivo de documentación */
 		var fileStyles = path.resolve(directory, 'doc.js');
 		if (!fs.existsSync(fileStyles)) {
 			fs.writeFileSync(fileStyles, fs.readFileSync('./resources/doc.js', { encoding: 'utf8' }).replace('@template', `<${componentName}></${componentName}>`),
 				{ encoding: 'utf8' });
-			helper.showMessage("Archivo '" + fileStyles + "' creado.");
+			ph.showMessage("Archivo '" + fileStyles + "' creado.");
 		} else {
-			helper.showMessage("El archivo '" + fileStyles + "' ya existe y no se ha creado uno nuevo.");
+			ph.showMessage("El archivo '" + fileStyles + "' ya existe y no se ha creado uno nuevo.");
 		}
 	}
 };
