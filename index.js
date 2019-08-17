@@ -5,15 +5,16 @@ const minify = require('minify');
 
 module.exports = {
 	compile: function (destination) {
+		/* Obtiene la ubicación de la carpeta donde se hizo el llamado del proceso. */
 		var directorySrc = path.resolve(process.cwd());
 
 		/* Nombre de los archivos */
-		const fileCode = './resources/code.js';
-		const fileTemplate = './resources/template.html';
-		const fileStyles = './resources/styles.scss';
-		const fileDoc = './resources/doc.js';
-		const fileExport = './resources/element.js';
-		const fileDocumentation = './resources/documentation.html';
+		const fileCode = path.resolve(directorySrc, 'code.js');
+		const fileTemplate = path.resolve(directorySrc, 'template.html');
+		const fileStyles = path.resolve(directorySrc, 'styles.scss');
+		const fileDoc = path.resolve(directorySrc, 'doc.js');
+		const fileExport = path.resolve(__dirname, 'resources', 'element.txt');
+		const fileDocumentation = path.resolve(__dirname, 'resources', 'documentation.html');
 
 		/* Valida que exista el archivo code.js */
 		if (!fs.existsSync(fileCode)) ph.showError("No existe el archivo de definición del componente '" + fileCode + "'.");

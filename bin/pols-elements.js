@@ -15,7 +15,7 @@ let commands = [
 
 if (!ph.inCommands(command, commands)) {
 	ph.showError(`Comando ${command} no reconocido.`, false);
-	ph.showCommands('Comandos permitidos', );
+	ph.showCommands(commands, 'Comandos permitidos');
 }
 
 const functions = require('../index.js');
