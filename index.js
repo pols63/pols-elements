@@ -292,7 +292,7 @@ module.exports = {
 		/* Archivo de código */
 		var fileCode = path.resolve(directory, 'code.js');
 		if (!fs.existsSync(fileCode)) {
-			fs.writeFileSync(fileCode, fs.readFileSync('./resources/code.js', { encoding: 'utf8' }).replace('@COMPONENT_NAME', componentName), { encoding: 'utf8' });
+			fs.writeFileSync(fileCode, fs.readFileSync(path.resolve(__dirname, 'resources/code.js'), { encoding: 'utf8' }).replace('@COMPONENT_NAME', componentName), { encoding: 'utf8' });
 			ph.showMessage("Archivo '" + fileCode + "' creado.");
 		} else {
 			ph.showMessage("El archivo '" + fileCode + "' ya existe y no se ha creado uno nuevo.");
@@ -300,7 +300,7 @@ module.exports = {
 		/* Archivo de plantilla */
 		var fileTemplate = path.resolve(directory, 'template.html');
 		if (!fs.existsSync(fileTemplate)) {
-			fs.writeFileSync(fileTemplate, fs.readFileSync('./resources/template.html', { encoding: 'utf8' }), { encoding: 'utf8' });
+			fs.writeFileSync(fileTemplate, fs.readFileSync(path.resolve(__dirname, 'resources/template.html'), { encoding: 'utf8' }), { encoding: 'utf8' });
 			ph.showMessage("Archivo '" + fileTemplate + "' creado.");
 		} else {
 			ph.showMessage("El archivo '" + fileTemplate + "' ya existe y no se ha creado uno nuevo.");
@@ -308,7 +308,7 @@ module.exports = {
 		/* Archivo de estilos */
 		var fileStyles = path.resolve(directory, 'styles.scss');
 		if (!fs.existsSync(fileStyles)) {
-			fs.writeFileSync(fileStyles, fs.readFileSync('./resources/styles.scss', { encoding: 'utf8' }), { encoding: 'utf8' });
+			fs.writeFileSync(fileStyles, fs.readFileSync(path.resolve(__dirname, 'resources/styles.scss'), { encoding: 'utf8' }), { encoding: 'utf8' });
 			ph.showMessage("Archivo '" + fileStyles + "' creado.");
 		} else {
 			ph.showMessage("El archivo '" + fileStyles + "' ya existe y no se ha creado uno nuevo.");
@@ -316,7 +316,7 @@ module.exports = {
 		/* Archivo de documentación */
 		var fileStyles = path.resolve(directory, 'doc.js');
 		if (!fs.existsSync(fileStyles)) {
-			fs.writeFileSync(fileStyles, fs.readFileSync('./resources/doc.js', { encoding: 'utf8' }).replace('@template', `<${componentName}></${componentName}>`),
+			fs.writeFileSync(fileStyles, fs.readFileSync(path.resolve(__dirname, 'resources/doc.js'), { encoding: 'utf8' }).replace('@template', `<${componentName}></${componentName}>`),
 				{ encoding: 'utf8' });
 			ph.showMessage("Archivo '" + fileStyles + "' creado.");
 		} else {
