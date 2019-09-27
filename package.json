@@ -1,7 +1,7 @@
 {
 	"name": "pols-elements",
-	"version": "1.0.0",
-	"description": "Permite crear plantillas para el maquetizado, programación y estilizado de un Custom Element. Las plantillas posteriormente se utilizarán para la aompilación a un fichero de JavaScript.",
+	"version": "1.0.1",
+	"description": "Permite crear custom elements en función a plantillas HTML, JS y CSS. Las plantillas posteriormente se transpilan a un fichero de JavaScript.",
 	"main": "index.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1"
