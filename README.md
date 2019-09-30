@@ -26,3 +26,13 @@ Con ello se creará una carpeta con cuatro archivo en su interior:
 ## Compilación y distribución
 
 Desde la ruta del componente creado, ejecutar:
+
+```
+$ pols-elements compile
+```
+
+Con ello, se creará la carpeta dist que contendrá:
+
+* **my-custom-element.js:** Archivo JavaScript que debe ser importado en el HTML y que contiene toda la lógica del componente.
+* **my-custom-element.min.js:** Archivo minificado.
+* **documentacion.html:** Documentación del componente. Ahí se puede visualizar el componente creado y hacer pruebas sobre él. Utilice las herramientas de desarrollo, existe ya una variable de nombre polsElement que hace referencia al componente creado.

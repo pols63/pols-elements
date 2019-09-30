@@ -1,6 +1,6 @@
 {
 	"name": "pols-elements",
-	"version": "1.0.1",
+	"version": "1.0.3",
 	"description": "Permite crear custom elements en función a plantillas HTML, JS y CSS. Las plantillas posteriormente se transpilan a un fichero de JavaScript.",
 	"main": "index.js",
 	"scripts": {
@@ -14,10 +14,14 @@
 	"license": "MIT",
 	"dependencies": {
 		"colors": "^1.3.3",
-		"icon.font": "^1.1.1",
 		"minify": "^4.1.3",
 		"pols-helper": "^1.0.5",
 		"sass": "^1.22.9"
 	},
-	"devDependencies": {}
+	"devDependencies": {},
+	"keywords": [
+		"custom-elements",
+		"javascript",
+		"html"
+	]
 }
