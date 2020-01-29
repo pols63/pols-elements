@@ -10,11 +10,11 @@ class @CLASS_NAME extends HTMLElement {
 	disconnectedCallback() {@DISCONNECTED_CALLBACK_CODE}
 	@PROPERTY_EVENTS
     static get observedAttributes() {
-        return [@OBSERVED];
+        return [@OBSERVED]
     }
 	
 	attributeChangedCallback(attribute, oldValue, newValue) {@ATTRIBUTE_CHANGE_CALLBACK}
 	@METHODS
 }
 
-customElements.define('@COMPONENT_NAME', @CLASS_NAME);
+customElements.define('@COMPONENT_NAME', @CLASS_NAME)
