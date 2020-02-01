@@ -60,10 +60,10 @@ module.exports = {
 					let getString, setString
 					/* Convierte la función en una cadena que lo define. */
 					if (typeof contentCode.properties[propertyName].get === 'function') {
-						getString = `get ${propertyName}() {\n\t\treturn (${contentCode.properties[propertyName].get.toString().replace(/^\w+\s*\(/, 'function(').replace(/\t\t\t/g, "\t\t")}).call(this);\n\t}\n`
+						getString = `get ${propertyName}() {\n\t\treturn (${contentCode.properties[propertyName].get.toString().replace(/^\w+\s*\(/, 'function(').replace(/\t\t\t/g, "\t\t")}).call(this)\n\t}\n`
 					}
 					if (typeof contentCode.properties[propertyName].set === 'function') {
-						setString = `set ${propertyName}(value) {\n\t\t(${contentCode.properties[propertyName].set.toString().replace(/^\w+\s*\(/, 'function(').replace(/\t\t\t/g, "\t\t")}).call(this, value);\n\t}\n`
+						setString = `set ${propertyName}(value) {\n\t\t(${contentCode.properties[propertyName].set.toString().replace(/^\w+\s*\(/, 'function(').replace(/\t\t\t/g, "\t\t")}).call(this, value)\n\t}\n`
 					}
 					propertyEvents += `\n\t${getString || ''}\n\t${setString || ''}`
 				}
@@ -84,7 +84,7 @@ module.exports = {
 			attributeNames.forEach(function (value, index, array) {
 				if (typeof contentCode.attributes[value] === 'function') {
 					functionString = contentCode.attributes[value].toString().replace(/^['"]?[a-zA-z0-9\-]+['"]?\s*\(/, 'function(')
-					temp.push(`case '` + value + `': (${functionString.replace(/\n/g, "\n\t")}.call(this, oldValue, newValue));\n\t\t\tbreak;`)
+					temp.push(`case '` + value + `': (${functionString.replace(/\n/g, "\n\t")}.call(this, oldValue, newValue))\n\t\t\tbreak;`)
 				}
 			})
 			attributeChangedCallbackString = temp.join("\n\t\t")
@@ -113,17 +113,17 @@ module.exports = {
 		/* Constructor */
 		fileContent2 = fileContent2.strongReplace('@CONSTRUCTOR_CODE', (
 			contentCode.constructor && typeof contentCode.constructor === 'function') ?
-			"\n\t\t" + ('(' + contentCode.constructor.toString() + ').call(this);').replace(/\n/g, "\n\t") : ''
+			"\n\t\t" + ('(' + contentCode.constructor.toString() + ').call(this)').replace(/\n/g, "\n\t") : ''
 		)
 		/* Connected callback */
 		fileContent2 = fileContent2.strongReplace('@CONNECTED_CALLBACK_CODE',
 			(contentCode.connectedCallback && typeof contentCode.connectedCallback === 'function') ?
-				"\n\t\t(" + contentCode.connectedCallback.toString() + ").call(this);\n\t" : ''
+				"\n\t\t(" + contentCode.connectedCallback.toString().replace(/\n/g, "\n\t") + ").call(this)\n\t" : ''
 		)
 		/* Disconnected callback */
 		fileContent2 = fileContent2.strongReplace('@DISCONNECTED_CALLBACK_CODE',
 			(contentCode.disconnectedCallback && typeof contentCode.disconnectedCallback === 'function') ?
-				"\n\t\t(" + contentCode.disconnectedCallback.toString() + ").call(this);\n\t" : ''
+				"\n\t\t(" + contentCode.disconnectedCallback.toString().replace(/\n/g, "\n\t") + ").call(this)\n\t" : ''
 		)
 		/* Property Events */
 		fileContent2 = fileContent2.strongReplace('@PROPERTY_EVENTS', propertyEvents ? propertyEvents : '')
