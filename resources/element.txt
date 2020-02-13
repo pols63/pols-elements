@@ -2,7 +2,7 @@ class @CLASS_NAME extends HTMLElement {
 
 	constructor() {
 		super();
-		this.shadow = this.attachShadow({mode: 'open'});
+		this.shadow = this.attachShadow({mode: 'open', delegatesFocus: @DELEGATES_FOCUS});
 		this.shadow.innerHTML = `@CONTENT_STYLES@CONTENT_TEMPLATE`;@CONSTRUCTOR_CODE
 	}
 

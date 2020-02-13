@@ -5,6 +5,8 @@ module.exports = {
 	template: true,
 	/* Indica si se utilizará archivo de estilos: styles.scss */
 	styles: true,
+	/* Indica si los hijos delegan en enfoque al host */
+	delegateFocus: true,
 	/* Constructor */
 	constructor: function () {
 

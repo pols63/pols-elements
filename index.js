@@ -110,6 +110,8 @@ module.exports = {
 		fileContent2 = fileContent2.strongReplace('@CONTENT_STYLES', contentStyles !== '' ? ("\n\t\t\t" + contentStyles.replace(/\n/g, "\n\t\t\t")) : '')
 		/* Template */
 		fileContent2 = fileContent2.strongReplace('@CONTENT_TEMPLATE', contentTemplate !== '' ? ("\n\t\t\t" + contentTemplate.replace(/\n/g, "\n\t\t\t")) : '')
+		/* Template */
+		fileContent2 = fileContent2.strongReplace('@DELEGATES_FOCUS', contentCode.delegatesFocus ? 'true' : 'false')
 		/* Constructor */
 		fileContent2 = fileContent2.strongReplace('@CONSTRUCTOR_CODE', (
 			contentCode.constructor && typeof contentCode.constructor === 'function') ?
