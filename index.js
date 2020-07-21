@@ -1,182 +1,185 @@
-const ph = require('pols-helper')
 const fs = require('fs')
 const path = require('path')
 const minify = require('minify')
+const sass = require('sass')
+require('colors')
+
+const showError = (message, terminate = true) => {
+	console.log(` ${message} `.bgRed)
+	if (terminate) process.exit()
+}
+
+const showMessage = message => console.log(` ${message} `.yellow)
+
+String.prototype.capitalize = function () {
+	return this.replace(/(?:^|\s)\S/g, function (a) {
+		return a.toUpperCase();
+	});
+};
 
 module.exports = {
 	compile: function (destination) {
 		/* Obtiene la ubicación de la carpeta donde se hizo el llamado del proceso. */
-		var directorySrc = path.resolve(process.cwd())
+		const directorySrc = path.resolve(process.cwd())
 
 		/* Nombre de los archivos */
-		const fileCode = path.resolve(directorySrc, 'code.js')
-		const fileTemplate = path.resolve(directorySrc, 'template.html')
-		const fileStyles = path.resolve(directorySrc, 'styles.scss')
-		const fileDoc = path.resolve(directorySrc, 'doc.js')
-		const fileExport = path.resolve(__dirname, 'resources', 'element.txt')
-		const fileDocumentation = path.resolve(__dirname, 'resources', 'documentation.html')
-
-		/* Valida que exista el archivo code.js */
-		if (!fs.existsSync(fileCode)) ph.showError("No existe el archivo de definición del componente '" + fileCode + "'.")
-
-		//Carga el archivo de configuración. Require hace la transformación a un objeto JSON.
-		var contentCode = require(fileCode)
-		if (!contentCode.tagName) ph.showError("No se ha definido el nombre de la etiqueta. Debe ser establecido en la propiedad 'tagName' en el archivo 'code.js'.")
-		var componentName = contentCode.tagName
-
-		/* Valida el nombre de la etiqueta */
-		if (!componentName.match(/[a-z]+-[a-z]+/)) ph.showError("La propiedad 'tagName' debe llegar un guión luego de la primera letra.")
-
-		/* Obtiene el nombre de la clase */
-		var className = componentName.strongReplace('-', ' ').capitalize().strongReplace(' ', '')
-
-		/* HTML */
-		var contentTemplate = ''
-		if (contentCode.template) {
-			if (!fs.existsSync(fileTemplate)) ph.showError("No existe el archivo de plantilla '" + fileTemplate + "'")
-			contentTemplate = fs.readFileSync(fileTemplate, { encoding: 'utf8' })
-			/* Elimina los comentarios. */
-			contentTemplate = contentTemplate.replace(/<!--.*-->/g, '')
+		const filesSrc = {
+			code: path.resolve(directorySrc, 'code.js'),
+			doc: path.resolve(directorySrc, 'doc.js'),
+			export: path.resolve(__dirname, 'resources', 'element.txt'),
+			documentation: path.resolve(__dirname, 'resources', 'documentation.html'),
 		}
 
-		/* CSS */
-		var contentStyles = ''
+		/* Define el objeto que contendrá información a exportar */
+		const contentExport = {}
+
+		/* Valida que exista el archivo code.js */
+		if (!fs.existsSync(filesSrc.code)) showError(`No existe el archivo de definición del componente '${filesSrc.code}'.`)
+
+		/* Carga el archivo de configuración */
+		const contentCode = require(filesSrc.code)
+		if (typeof contentCode.tagName !== 'string') showError(`La propiedad 'tagName' en el archivo '${filesSrc.code}' debe ser de tipo 'string'.`)
+		/* Valida el nombre de la etiqueta */
+		const tagNameRegExp = /[a-z]+-[a-z]+/
+		if (!contentCode.tagName.match(tagNameRegExp)) showError(`La propiedad 'tagName' debe cumplir con el patrón ${tagNameRegExp.toString()}.`)
+
+		/* Obtiene el nombre de la clase */
+		contentExport.className = contentCode.tagName.replace(/-/g, ' ').capitalize().replace(/\s/g, '')
+
+		/* Obtiene el nombre de la plantilla */
+		if (contentCode.template) {
+			if (typeof contentCode.template !== 'string') showError(`La propiedad 'template' del archivo '${filesSrc.code}' debe ser de tipo 'string'.`)
+			contentCode.template = contentCode.template.trim()
+			if (!contentCode.template) showError(`La propiedad 'template' del archivo '${filesSrc.code}' no debe ser una cadena vacía.`)
+			filesSrc.template = path.resolve(directorySrc, contentCode.template)
+			if (!fs.existsSync(filesSrc.template)) showError(`No existe el archivo '${filesSrc.template}'.`)
+		}
+
+		/* Obtiene el nombre de la hoja de estilos */
 		if (contentCode.styles) {
-			if (!fs.existsSync(fileStyles)) ph.showError("Se ha indicado 'true' en la propiedad 'style' del archivo 'code.js' pero no existe el archivo de estilos '" + fileStyles + "'")
-			var Sass = require('sass')
-			contentStyles = '<style>' + Sass.renderSync({
-				/* Se pasa el nombre del archivo para que funcione la sentencia import en el código */
-				file: fileStyles,
-				data: fs.readFileSync(fileStyles, { encoding: 'utf8' }).replace(/\/\*.*\*\//g, ''),
-				//outputStyle: "compressed",
-			}).css + '</style>'
+			if (typeof contentCode.styles !== 'string') showError(`La propiedad 'styles' del archivo '${filesSrc.code}' debe ser de tipo 'string'.`)
+			contentCode.styles = contentCode.styles.trim()
+			if (!contentCode.styles) showError(`La propiedad 'styles' del archivo '${filesSrc.code}' no debe ser una cadena vacía.`)
+			filesSrc.styles = path.resolve(directorySrc, contentCode.styles)
+			if (!fs.existsSync(filesSrc.styles)) showError(`No existe el archivo '${filesSrc.styles}'.`)
+		}
+
+		/* SHADOW */
+		switch (contentCode.shadow) {
+			case 'open':
+			case 'close':
+				contentExport.shadow = `\n\t\tconst shadowRoot = this.attachShadow({mode: '${contentCode.shadow}', delegatesFocus: @DELEGATES_FOCUS})\n\t\tshadowRoot.innerHTML = \`@CONTENT_STYLES@CONTENT_TEMPLATE\`;`
+				break
+		}
+
+		/* HTML */
+		if (filesSrc.template) contentExport.template = fs.readFileSync(filesSrc.template, { encoding: 'utf8' }).replace(/<!--.*-->/g, '')
+
+		/* CSS */
+		if (filesSrc.styles) {
+			const css = {
+				normal: sass.renderSync({
+					file: filesSrc.styles,
+					data: fs.readFileSync(filesSrc.styles, { encoding: 'utf8' }).replace(/\/\*.*\*\//g, ''),
+					//outputStyle: "compressed",
+				}).css,
+				compressed: sass.renderSync({
+					file: filesSrc.styles,
+					data: fs.readFileSync(filesSrc.styles, { encoding: 'utf8' }).replace(/\/\*.*\*\//g, ''),
+					//outputStyle: "compressed",
+				}).css
+			}
+			contentExport.styles = `<style>${css.normal}</style>`
+			contentExport.stylesCompressed = `<style>${css.compressed}</style>`
 		}
 
 		//Se obtiene una cadena con la definición del arreglo de propiedades.
-		var propertyEvents = ''
-		if (contentCode.properties !== undefined) {
-			for (let propertyName in contentCode.properties) {
+		if (typeof contentCode.properties === 'object') {
+			const propertyEvents = []
+			for (const propertyName in contentCode.properties) {
 				if (typeof contentCode.properties[propertyName] === 'object') {
-					let getString, setString
-					/* Convierte la función en una cadena que lo define. */
-					if (typeof contentCode.properties[propertyName].get === 'function') {
-						getString = `get ${propertyName}() {\n\t\treturn (${contentCode.properties[propertyName].get.toString().replace(/^\w+\s*\(/, 'function(').replace(/\t\t\t/g, "\t\t")}).call(this)\n\t}\n`
-					}
-					if (typeof contentCode.properties[propertyName].set === 'function') {
-						setString = `set ${propertyName}(value) {\n\t\t(${contentCode.properties[propertyName].set.toString().replace(/^\w+\s*\(/, 'function(').replace(/\t\t\t/g, "\t\t")}).call(this, value)\n\t}\n`
-					}
-					propertyEvents += `\n\t${getString || ''}\n\t${setString || ''}`
+					let getString = (typeof contentCode.properties[propertyName].get === 'function') ? `get ${propertyName}() {\n\t\treturn (${contentCode.properties[propertyName].get.toString().replace(/^\w+\s*\(/, 'function(').replace(/\t\t\t/g, "\t\t")}).call(this)\n\t}\n` : ''
+					let setString = (typeof contentCode.properties[propertyName].set === 'function') ? `set ${propertyName}(value) {\n\t\t(${contentCode.properties[propertyName].set.toString().replace(/^\w+\s*\(/, 'function(').replace(/\t\t\t/g, "\t\t")}).call(this, value)\n\t}\n` : ''
+					propertyEvents.push(`\n\t${getString}\n\t${setString}`)
 				}
 			}
+			contentExport.propertyEvents = propertyEvents.join('')
 		}
 
-		var temp = []
+		/* Se obtiene la cadena de atributos. */
+		if (typeof contentCode.attributes === 'object') {
+			contentExport.attributes = `'${Object.getOwnPropertyNames(contentCode.attributes).join("','")}'`
 
-		//Se obtiene la cadena de atributos.
-		var attributesString = ''
-		var attributeChangedCallbackString = ''
-		if (typeof contentCode.attributes !== 'undefined') {
-			var attributeNames = Object.getOwnPropertyNames(contentCode.attributes)
-			attributesString = "'" + attributeNames.join("','") + "'"
-
-			var functionString = ''
-			temp = []
-			attributeNames.forEach(function (value, index, array) {
-				if (typeof contentCode.attributes[value] === 'function') {
-					functionString = contentCode.attributes[value].toString().replace(/^['"]?[a-zA-z0-9\-]+['"]?\s*\(/, 'function(')
-					temp.push(`case '` + value + `': (${functionString.replace(/\n/g, "\n\t")}.call(this, oldValue, newValue))\n\t\t\tbreak;`)
+			const tempArray = []
+			for (const attributeName in contentCode.attributes) {
+				if (typeof contentCode.attributes[attributeName] === 'function') {
+					const functionString = contentCode.attributes[attributeName].toString().replace(/^['"]?[a-zA-z0-9\-]+['"]?\s*\(/, 'function(')
+					tempArray.push(`case '${attributeName}': (${functionString.replace(/\n/g, "\n\t")}.call(this, oldValue, newValue))\n\t\t\tbreak;`)
 				}
-			})
-			attributeChangedCallbackString = temp.join("\n\t\t")
+			}
+			contentExport.attributesChangedCallbackString = tempArray.join("\n\t\t")
 		}
 
-		//Se obtiene una cadena con la definición de los métodos.
-		var methodsString = ''
-		if (typeof contentCode.methods !== 'undefined') {
+		/* Se obtiene una cadena con la definición de los métodos. */
+		if (typeof contentCode.methods === 'object') {
 			var methodNames = Object.getOwnPropertyNames(contentCode.methods)
-			temp = []
-			methodNames.forEach(function (value, index, array) {
-				if (typeof contentCode.methods[value] === 'function') {
-					temp.push(contentCode.methods[value].toString().replace(/^\w+\s*\(/, value + '(').replace(/\n\t/g, "\n") + "\n")
+
+			const tempArray = []
+			for (const methodName in contentCode.methods) {
+				if (typeof contentCode.methods[methodName] === 'function') {
+					tempArray.push(contentCode.methods[methodName].toString().replace(/^\w+\s*\(/, methodName + '(').replace(/\n\t/g, "\n") + "\n")
 				}
-			})
-			methodsString = temp.join("\n\t")
+			}
+			contentExport.methods = tempArray.join("\n\t")
 		}
 
-		var fileContent2 = fs.readFileSync(fileExport, { encoding: 'utf8' })
-		/* Nombre de la clase */
-		fileContent2 = fileContent2.strongReplace('@CLASS_NAME', className)
-		/* Estilos */
-		fileContent2 = fileContent2.strongReplace('@CONTENT_STYLES', contentStyles !== '' ? ("\n\t\t\t" + contentStyles.replace(/\n/g, "\n\t\t\t")) : '')
-		/* Template */
-		fileContent2 = fileContent2.strongReplace('@CONTENT_TEMPLATE', contentTemplate !== '' ? ("\n\t\t\t" + contentTemplate.replace(/\n/g, "\n\t\t\t")) : '')
-		/* Template */
-		fileContent2 = fileContent2.strongReplace('@DELEGATES_FOCUS', contentCode.delegatesFocus ? 'true' : 'false')
-		/* Constructor */
-		fileContent2 = fileContent2.strongReplace('@CONSTRUCTOR_CODE', (
-			contentCode.constructor && typeof contentCode.constructor === 'function') ?
-			"\n\t\t" + ('(' + contentCode.constructor.toString() + ').call(this)').replace(/\n/g, "\n\t") : ''
-		)
-		/* Connected callback */
-		fileContent2 = fileContent2.strongReplace('@CONNECTED_CALLBACK_CODE',
-			(contentCode.connectedCallback && typeof contentCode.connectedCallback === 'function') ?
-				"\n\t\t(" + contentCode.connectedCallback.toString().replace(/\n/g, "\n\t") + ").call(this)\n\t" : ''
-		)
-		/* Disconnected callback */
-		fileContent2 = fileContent2.strongReplace('@DISCONNECTED_CALLBACK_CODE',
-			(contentCode.disconnectedCallback && typeof contentCode.disconnectedCallback === 'function') ?
-				"\n\t\t(" + contentCode.disconnectedCallback.toString().replace(/\n/g, "\n\t") + ").call(this)\n\t" : ''
-		)
-		/* Property Events */
-		fileContent2 = fileContent2.strongReplace('@PROPERTY_EVENTS', propertyEvents ? propertyEvents : '')
-		/* Attribute change callback */
-		fileContent2 = fileContent2.strongReplace('@OBSERVED', attributesString)
-		fileContent2 = fileContent2.strongReplace('@ATTRIBUTE_CHANGE_CALLBACK', attributeChangedCallbackString ?
-			`\n\t\tswitch (attribute) {\n\t\t\t${attributeChangedCallbackString.replace(/\n/g, "\n\t")}\n\t\t}\n\t` : ''
-		)
-		/* Métodos */
-		fileContent2 = fileContent2.strongReplace('@METHODS', methodsString ? `\n\t${methodsString}` : '')
-		/* Nombre del componente */
-		fileContent2 = fileContent2.strongReplace('@COMPONENT_NAME', componentName)
+		let contentFileExport = fs
+			.readFileSync(filesSrc.export, { encoding: 'utf8' })
+			.replace(/@CLASS_NAME/g, contentExport.className)
+			.replace(/@SHADOW/g, contentExport.shadow)
+			.replace(/@CONTENT_STYLES/, contentExport.styles ? ("\n\t\t\t" + contentExport.styles.replace(/\n/g, "\n\t\t\t")) : '')
+			.replace(/@CONTENT_TEMPLATE/, contentExport.template ? ("\n\t\t\t" + contentExport.template.replace(/\n/g, "\n\t\t\t")) : '')
+			.replace(/@DELEGATES_FOCUS/, contentCode.delegatesFocus ? 'true' : 'false')
+			.replace(/@CONSTRUCTOR_CODE/, (typeof contentCode.constructor === 'function') ? "\n\t\t" + ('(' + contentCode.constructor.toString() + ').call(this)').replace(/\n/g, "\n\t") : '')
+			.replace(/@CONNECTED_CALLBACK_CODE/, (typeof contentCode.connectedCallback === 'function') ? "\n\t\t(" + contentCode.connectedCallback.toString().replace(/\n/g, "\n\t") + ").call(this)\n\t" : '')
+			.replace(/@DISCONNECTED_CALLBACK_CODE/, (typeof contentCode.disconnectedCallback === 'function') ? "\n\t\t(" + contentCode.disconnectedCallback.toString().replace(/\n/g, "\n\t") + ").call(this)\n\t" : '')
+			.replace(/@PROPERTY_EVENTS/, contentExport.propertyEvents || '')
+			.replace(/@OBSERVED/, contentExport.attributes)
+			.replace(/@ATTRIBUTE_CHANGE_CALLBACK/, contentExport.attributesChangedCallbackString ? `\n\t\tswitch (attribute) {\n\t\t\t${contentExport.attributesChangedCallbackString.replace(/\n/g, "\n\t")}\n\t\t}\n\t` : '')
+			.replace(/@METHODS/, contentExport.methods ? `\n\t${contentExport.methods}` : '')
+			.replace(/@COMPONENT_NAME/, contentCode.tagName)
+
+		const filesDist = {
+			dist: path.resolve(directorySrc, 'dist'),
+		}
+		filesDist.js = path.resolve(filesDist.dist, `${contentCode.tagName}.js`)
+		filesDist.jsMin = path.resolve(filesDist.dist, `${contentCode.tagName}.min.js`)
 
 		/* Crea la carpeta donde se alojarán los archivos compilados, esta carpeta estará dentro de la carpeta de código del elemento. */
-		var distributionDir = path.resolve(directorySrc, 'dist')
-		if (!fs.existsSync(distributionDir)) {
-			fs.mkdirSync(distributionDir)
-			ph.showMessage("Directorio '" + distributionDir + "' creado.")
+		if (!fs.existsSync(filesDist.dist)) {
+			fs.mkdirSync(filesDist.dist)
+			showMessage("Directorio '" + filesDist.dist + "' creado.")
 		}
 
 		/* Crea el archivo compilado. */
-		var outputFile2 = path.resolve(distributionDir, componentName + '.js')
-		fs.writeFileSync(outputFile2, fileContent2, { encoding: 'utf8' })
-		ph.showMessage("Archivo '" + outputFile2 + "' creado.")
-		if (destination) {
-			outputFile2 = path.resolve(destination, componentName + '.js')
-			fs.writeFileSync(outputFile2, fileContent2, { encoding: 'utf8' })
-			ph.showMessage("Archivo '" + outputFile2 + "' creado.")
-		}
+		fs.writeFileSync(filesDist.js, contentFileExport, { encoding: 'utf8' })
+		showMessage("Archivo '" + filesDist.js + "' creado.")
 
 		/* Crea el archivo compilado minificado. */
-		minify(outputFile2).then(function (text) {
-			outputFile2 = path.resolve(distributionDir, componentName + '.min.js')
-			fs.writeFileSync(outputFile2, text, { encoding: 'utf8' })
-			ph.showMessage("Archivo '" + outputFile2 + "' creado.")
-			if (destination) {
-				outputFile2 = path.resolve(destination, componentName + '.min.js')
-				fs.writeFileSync(outputFile2, text, { encoding: 'utf8' })
-				ph.showMessage("Archivo '" + outputFile2 + "' creado.")
-			}
-		})
+		minify(filesDist.js).then(function (text) {
+			fs.writeFileSync(filesDist.jsMin, text, { encoding: 'utf8' })
+			showMessage("Archivo '" + filesDist.jsMin + "' creado.")
+		}).catch(err => showError(`Error al intentar minimalizar el archivo ${filesDist.js}. El error es: ${err}`))
 
 		/* Crea el archivo de documentación */
-		if (fs.existsSync(fileDoc)) {
-			let info = require(fileDoc)
-			outputFile2 = path.resolve(distributionDir, 'documentation.html')
+		if (fs.existsSync(filesSrc.doc)) {
+			let info = require(filesSrc.doc)
+			let outputFile2 = path.resolve(filesDist.dist, 'documentation.html')
 			/* Lee el archivo de plantilla de documentación y coloca el nombre del componente. */
-			let content = fs.readFileSync(fileDocumentation, { encoding: 'utf8' }).replace(/@COMPONENT_NAME/g, componentName)
+			let content = fs.readFileSync(filesSrc.documentation, { encoding: 'utf8' }).replace(/@COMPONENT_NAME/g, contentCode.tagName)
 			if (info.descriptions) {
 				/* Zona de la etiqueta */
-				content = content.replace(/@COMPONENT_TEMPLATE/g, info.template ? info.template : `<${componentName}></${componentName}>`)
+				content = content.replace(/@COMPONENT_TEMPLATE/g, info.template ? info.template : `<${contentCode.tagName}></${contentCode.tagName}>`)
 				if (info.principal) content = content.replace(/@PRINCIPAL/g, info.principal.replace(/\n/g, '').replace(/\t/g, ''))
 			}
 			/* Cadena para colocar los atributos en la zona de la sintáxis. */
@@ -281,44 +284,52 @@ module.exports = {
 			}
 			/* Escritura del archivo */
 			fs.writeFileSync(outputFile2, content, { encoding: 'utf8' })
-			ph.showMessage("Archivo '" + outputFile2 + "' creado.")
+			showMessage("Archivo '" + outputFile2 + "' creado.")
 		}
 	},
-	create: function (componentName) {
+
+	create: function (tagName) {
 		/* Directorio pricipal */
-		var directory = path.resolve(process.cwd())
+		const directory = path.resolve(process.cwd())
+
+		const files = {
+			code: path.resolve(directory, 'code.js'),
+			template: path.resolve(directory, 'template.html'),
+			style: path.resolve(directory, 'styles.scss'),
+			style: path.resolve(directory, 'doc.js'),
+		}
+
 		/* Archivo de código */
-		var fileCode = path.resolve(directory, 'code.js')
-		if (!fs.existsSync(fileCode)) {
-			fs.writeFileSync(fileCode, fs.readFileSync(path.resolve(__dirname, 'resources/code.js'), { encoding: 'utf8' }).replace('@COMPONENT_NAME', componentName), { encoding: 'utf8' })
-			ph.showMessage("Archivo '" + fileCode + "' creado.")
+		if (!fs.existsSync(files.code)) {
+			fs.writeFileSync(files.code, fs.readFileSync(path.resolve(__dirname, 'resources/code.js'), { encoding: 'utf8' }).replace('@COMPONENT_NAME', tagName), { encoding: 'utf8' })
+			showMessage("Archivo '" + files.code + "' creado.")
 		} else {
-			ph.showMessage("El archivo '" + fileCode + "' ya existe y no se ha creado uno nuevo.")
+			showMessage("El archivo '" + files.code + "' ya existe y no se ha creado uno nuevo.")
 		}
+
 		/* Archivo de plantilla */
-		var fileTemplate = path.resolve(directory, 'template.html')
-		if (!fs.existsSync(fileTemplate)) {
-			fs.writeFileSync(fileTemplate, fs.readFileSync(path.resolve(__dirname, 'resources/template.html'), { encoding: 'utf8' }), { encoding: 'utf8' })
-			ph.showMessage("Archivo '" + fileTemplate + "' creado.")
+		if (!fs.existsSync(files.template)) {
+			fs.writeFileSync(files.template, fs.readFileSync(path.resolve(__dirname, 'resources/template.html'), { encoding: 'utf8' }), { encoding: 'utf8' })
+			showMessage("Archivo '" + files.template + "' creado.")
 		} else {
-			ph.showMessage("El archivo '" + fileTemplate + "' ya existe y no se ha creado uno nuevo.")
+			showMessage("El archivo '" + files.template + "' ya existe y no se ha creado uno nuevo.")
 		}
+
 		/* Archivo de estilos */
-		var fileStyles = path.resolve(directory, 'styles.scss')
-		if (!fs.existsSync(fileStyles)) {
-			fs.writeFileSync(fileStyles, fs.readFileSync(path.resolve(__dirname, 'resources/styles.scss'), { encoding: 'utf8' }), { encoding: 'utf8' })
-			ph.showMessage("Archivo '" + fileStyles + "' creado.")
+		if (!fs.existsSync(files.style)) {
+			fs.writeFileSync(files.style, fs.readFileSync(path.resolve(__dirname, 'resources/styles.scss'), { encoding: 'utf8' }), { encoding: 'utf8' })
+			showMessage("Archivo '" + files.style + "' creado.")
 		} else {
-			ph.showMessage("El archivo '" + fileStyles + "' ya existe y no se ha creado uno nuevo.")
+			showMessage("El archivo '" + files.style + "' ya existe y no se ha creado uno nuevo.")
 		}
+
 		/* Archivo de documentación */
-		var fileStyles = path.resolve(directory, 'doc.js')
-		if (!fs.existsSync(fileStyles)) {
-			fs.writeFileSync(fileStyles, fs.readFileSync(path.resolve(__dirname, 'resources/doc.js'), { encoding: 'utf8' }).replace('@template', `<${componentName}></${componentName}>`),
+		if (!fs.existsSync(files.style)) {
+			fs.writeFileSync(files.style, fs.readFileSync(path.resolve(__dirname, 'resources/doc.js'), { encoding: 'utf8' }).replace('@template', `<${tagName}></${tagName}>`),
 				{ encoding: 'utf8' })
-			ph.showMessage("Archivo '" + fileStyles + "' creado.")
+			showMessage("Archivo '" + files.style + "' creado.")
 		} else {
-			ph.showMessage("El archivo '" + fileStyles + "' ya existe y no se ha creado uno nuevo.")
+			showMessage("El archivo '" + files.style + "' ya existe y no se ha creado uno nuevo.")
 		}
 	}
 }

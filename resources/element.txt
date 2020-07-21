@@ -1,9 +1,7 @@
 class @CLASS_NAME extends HTMLElement {
 
 	constructor() {
-		super();
-		this.shadow = this.attachShadow({mode: 'open', delegatesFocus: @DELEGATES_FOCUS});
-		this.shadow.innerHTML = `@CONTENT_STYLES@CONTENT_TEMPLATE`;@CONSTRUCTOR_CODE
+		super()@SHADOW@CONSTRUCTOR_CODE
 	}
 
 	connectedCallback() {@CONNECTED_CALLBACK_CODE}
