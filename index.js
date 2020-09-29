@@ -70,6 +70,8 @@ module.exports = {
 			case 'close':
 				contentExport.shadow = `\n\t\tconst shadowRoot = this.attachShadow({mode: '${contentCode.shadow}', delegatesFocus: @DELEGATES_FOCUS})\n\t\tshadowRoot.innerHTML = \`@CONTENT_STYLES@CONTENT_TEMPLATE\`;`
 				break
+			default:
+				contentExport.shadow = ';'
 		}
 
 		/* HTML */
@@ -296,7 +298,7 @@ module.exports = {
 			code: path.resolve(directory, 'code.js'),
 			template: path.resolve(directory, 'template.html'),
 			style: path.resolve(directory, 'styles.scss'),
-			style: path.resolve(directory, 'doc.js'),
+			doc: path.resolve(directory, 'doc.js'),
 		}
 
 		/* Archivo de código */
@@ -324,12 +326,12 @@ module.exports = {
 		}
 
 		/* Archivo de documentación */
-		if (!fs.existsSync(files.style)) {
-			fs.writeFileSync(files.style, fs.readFileSync(path.resolve(__dirname, 'resources/doc.js'), { encoding: 'utf8' }).replace('@template', `<${tagName}></${tagName}>`),
+		if (!fs.existsSync(files.doc)) {
+			fs.writeFileSync(files.doc, fs.readFileSync(path.resolve(__dirname, 'resources/doc.js'), { encoding: 'utf8' }).replace('@template', `<${tagName}></${tagName}>`),
 				{ encoding: 'utf8' })
-			showMessage("Archivo '" + files.style + "' creado.")
+			showMessage("Archivo '" + files.doc + "' creado.")
 		} else {
-			showMessage("El archivo '" + files.style + "' ya existe y no se ha creado uno nuevo.")
+			showMessage("El archivo '" + files.docs + "' ya existe y no se ha creado uno nuevo.")
 		}
 	}
 }

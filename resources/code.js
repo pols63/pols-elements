@@ -6,7 +6,7 @@ module.exports = {
 	template: 'template.html',
 
 	/* Indica si se utilizará archivo de estilos: styles.scss */
-	styles: 'styles.css',
+	styles: 'styles.scss',
 
 	/* Indica si los hijos delegan en enfoque al host */
 	delegatesFocus: true,
