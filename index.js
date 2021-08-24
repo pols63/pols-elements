@@ -143,7 +143,7 @@ module.exports = {
 			.replace(/@CONTENT_TEMPLATE/, contentExport.template ? ("\n\t\t\t" + contentExport.template.replace(/\n/g, "\n\t\t\t")) : '')
 			.replace(/@DELEGATES_FOCUS/, contentCode.delegatesFocus ? 'true' : 'false')
 			.replace(/@CONSTRUCTOR_CODE/, (typeof contentCode.constructor === 'function') ? "\n\t\t" + ('(' + contentCode.constructor.toString() + ').call(this)').replace(/\n/g, "\n\t") : '')
-			.replace(/@CONNECTED_CALLBACK_CODE/, (typeof contentCode.connectedCallback === 'function') ? "\n\t\t(" + contentCode.connectedCallback.toString().replace(/\n/g, "\n\t") + ").call(this)\n\t" : '')
+			.replace(/@CONNECTED_CALLBACK_CODE/, (typeof contentCode.connectedCallback === 'function') ? "\n\t\t(" + contentCode.connectedCallback.toString().replace(/\n/g, "\n\t\t") + ").call(this)\n\t" : '')
 			.replace(/@DISCONNECTED_CALLBACK_CODE/, (typeof contentCode.disconnectedCallback === 'function') ? "\n\t\t(" + contentCode.disconnectedCallback.toString().replace(/\n/g, "\n\t") + ").call(this)\n\t" : '')
 			.replace(/@PROPERTY_EVENTS/, contentExport.propertyEvents || '')
 			.replace(/@OBSERVED/, contentExport.attributes)
